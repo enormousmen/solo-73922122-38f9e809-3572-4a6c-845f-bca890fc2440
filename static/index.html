@@ -33,6 +33,12 @@
         </label>
         <div class="row">
           <button type="button" id="sample-btn" class="ghost small">填入样例向量</button>
+          <button type="button" id="overflow-ok-btn" class="ghost small"
+                  title="support + 全 1e37：float32 中间计算溢出，float64 重算后恢复">
+            溢出样例·可恢复</button>
+          <button type="button" id="overflow-fail-btn" class="ghost small"
+                  title="support + 全 1e38：float64 重算后仍超出 float32 范围，该单报错">
+            溢出样例·超范围</button>
           <label class="inline">计算耗时
             <input id="compute-ms" type="number" min="0" max="60000" value="900" />
             <span class="unit">ms</span>

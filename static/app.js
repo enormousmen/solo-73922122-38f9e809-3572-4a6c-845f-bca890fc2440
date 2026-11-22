@@ -112,6 +112,14 @@ function fillSample() {
   $("vector").value = parts.join(", ");
 }
 
+/* Overflow demo vectors: pick the support adapter and fill a constant. */
+function fillOverflowDemo(value) {
+  const dim = state.presets ? state.presets.input_dim : 128;
+  $("adapter").value = "support";
+  renderAdapterMeta();
+  $("vector").value = Array(dim).fill(value).join(", ");
+}
+
 /* -------------------------------------------------------------- render */
 
 function tagFor(item) {
@@ -362,6 +370,8 @@ async function init() {
   }
   $("submit-form").addEventListener("submit", submitRequest);
   $("sample-btn").addEventListener("click", fillSample);
+  $("overflow-ok-btn").addEventListener("click", () => fillOverflowDemo("1e37"));
+  $("overflow-fail-btn").addEventListener("click", () => fillOverflowDemo("1e38"));
   $("demo-btn").addEventListener("click", runDemo);
   $("reset-btn").addEventListener("click", resetNode);
   $("detail-close").addEventListener("click", () => $("detail-dialog").close());
