@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LoRA 小内存推理节点</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>LoRA 小内存推理节点</h1>
+      <p class="sub">CPU · NumPy · 2 个计算位 · 同一适配器共享一份权重</p>
+    </div>
+    <div class="top-actions">
+      <button id="demo-btn" class="primary">运行样例</button>
+      <button id="reset-btn" class="ghost">重置节点</button>
+      <span id="conn" class="pill">连接中…</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="card submit-card">
+      <h2>提交请求</h2>
+      <form id="submit-form">
+        <label>预置适配器
+          <select id="adapter" required></select>
+        </label>
+        <div class="adapter-meta" id="adapter-meta"></div>
+        <label>输入向量（<span id="dim">128</span> 维，留空使用样例）
+          <textarea id="vector" rows="3" spellcheck="false"
+            placeholder="0.1, -0.2, 0.3 …  或点击右侧按钮填入样例"></textarea>
+        </label>
+        <div class="row">
+          <button type="button" id="sample-btn" class="ghost small">填入样例向量</button>
+          <label class="inline">计算耗时
+            <input id="compute-ms" type="number" min="0" max="60000" value="900" />
+            <span class="unit">ms</span>
+          </label>
+          <label class="inline checkbox">
+            <input id="fail-load" type="checkbox" /> 模拟加载失败（仅当本次需要加载权重时生效）
+          </label>
+          <button type="submit" class="primary">提交</button>
+        </div>
+        <p id="form-msg" class="msg"></p>
+      </form>
+      <p class="hint">留空向量时，服务端按请求序号生成确定性样例；同一向量与适配器结果可复现。</p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>内存预算 <span class="muted" id="budget-label"></span></h2>
+        <div class="meter">
+          <div class="meter-fill" id="meter-fill"></div>
+        </div>
+        <div class="meter-legend">
+          <span id="used-label">已用 0 B</span>
+          <span id="free-label">剩余 0 B</span>
+        </div>
+        <h3>驻留权重</h3>
+        <table class="tbl">
+          <thead><tr><th>适配器</th><th>字节</th><th>引用</th><th>状态</th></tr></thead>
+          <tbody id="resident-body"><tr><td colspan="4" class="empty">暂无驻留权重</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>计算位 <span class="muted" id="slots-label"></span></h2>
+        <div id="running-list" class="running-list"></div>
+        <p class="muted small">最多同时计算 2 单；同一适配器的请求共用同一份驻留权重。</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>等待队列 <span class="muted" id="queue-label"></span></h2>
+      <table class="tbl queue">
+        <thead>
+          <tr>
+            <th>#</th><th>请求</th><th>适配器</th><th>状态</th>
+            <th>已等待</th><th>说明</th>
+          </tr>
+        </thead>
+        <tbody id="queue-body"><tr><td colspan="6" class="empty">队列为空</td></tr></tbody>
+      </table>
+      <p class="hint">
+        队首缺内存且有空闲计算位时，只放行一单使用已驻留权重的后到请求；
+        每个队首最多被越过一次。若能卸载空闲权重让队首启动，则优先队首。
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>最近完成 / 结果 <span class="muted" id="finished-label"></span></h2>
+      <table class="tbl">
+        <thead><tr><th>请求</th><th>适配器</th><th>状态</th><th>耗时</th><th>输出预览</th></tr></thead>
+        <tbody id="finished-body"><tr><td colspan="5" class="empty">暂无完成请求</td></tr></tbody>
+      </table>
+      <p class="hint">点击任意请求行查看完整输出向量与错误信息。</p>
+    </section>
+
+    <section class="card">
+      <h2>事件时间线</h2>
+      <div id="events" class="events"></div>
+    </section>
+  </main>
+
+  <dialog id="detail-dialog">
+    <div class="dialog-head">
+      <h2 id="detail-title">请求详情</h2>
+      <button id="detail-close" class="ghost small">关闭</button>
+    </div>
+    <pre id="detail-body"></pre>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

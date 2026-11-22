@@ -1,0 +1,22 @@
+name: lora-node
+services:
+  lora-node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lora-node:local
+    ports:
+      - "8000:8000"
+    environment:
+      NODE_MEMORY_BYTES: "30000"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/presets', timeout=2)"
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
